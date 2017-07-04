@@ -14,32 +14,19 @@ RUN         /root/.pyenv/versions/deploy_eb_docker/bin/pip install -r .requireme
 
 # upervisor 파일 지정된 경로로 복사
 COPY         .config/supervisor/uwsgi.conf /etc/supervisor/conf.d/
+COPY         .config/supervisor/nginx.conf /etc/supervisor/conf.d/
 # command = /root/.pyenv/versions/deploy_eb_docker/bin/uwsgi --http :8000 --chdir /srv/deploy_eb_docker/django_app --home /root/.pyenv/versions/deploy_eb_docker -w config.wsgi.debug
+
+
+# nginx파일 복사
+COPY        .config/nginx/nginx.conf /etc/nginx/nginx.conf
+COPY        .config/nginx/nginx-app.conf /etc/nginx/sites-available
+RUN         rm -rf /etc/nginx/sites-enabled/default
+RUN         ln -sf /etc/nginx/sites-available/nginx-app.conf /etc/nginx/sites-enabled/nginx-app.conf
+
 
 CMD         supervisord -n
 
+
 # 외부 통신을 어느 포트와 할지 지정(오픈 포트 지정)
 EXPOSE      80 8000
-
-
-
-
-
-## 폴더 권한을 설정해줘야 함.
-#RUN         chown -R root /srv/deploy_eb_docker/
-#RUN         chmod 666 /srv/deploy_eb_docker/
-#
-## nginx설정파일을 서버 구동을 위해서 이동
-#RUN         cp -f /srv/deploy_eb_docker/.cnonfig_secret/nginx/nginx.conf /etc/nginx/nginx.conf
-#
-## nginx설정 파일 두번째 것을 서버 구동을 위해서 이동
-#RUN         cp -f /srv/deploy_eb_docker/.config_secret/nginx/ec2.conf /etc/nginx/sites-available
-#
-## uwsgi서비스 파일을 서버 구동을 위해서 이동
-#RUN         cp -f /srv/deploy_eb_docker/.config_secret/uwsgi/uwsgi.service /etc/systemd/system/uwsgi.service
-#
-## sites-available폴더에 있는 설정파일을 링크걸어서 enable폴더에 삽입
-#RUN         ln -s /etc/nginx/sites-available/ec2.conf /etc/nginx/sites-enabled/ec2.conf
-#
-## sites-enabled폴더에 원래 있던 default파일 삭제
-#RUN         rm /etc/nginx/sites-enabled/default
